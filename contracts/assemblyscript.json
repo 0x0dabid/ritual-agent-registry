@@ -1,0 +1,16 @@
+{
+  "target": "release",  // debug | release
+  "import": ["runtime/core/runtime"],
+  "runtime": "stub",
+  "sourceMap": true,
+  "validate": true,
+  "debug": false,
+  "enable": ["bulk-memory", "sign-extension-ops"],
+  "importMemory": true,
+  "memoryBase": 0,
+  "memoryMaximum": 4194304,
+  "extern": {
+    " ritual_precompile_call": " ritual_precompile_call@00000000",  // placeholder for Ritual precompile call
+    " revert": "revert@00000000"
+  }
+}

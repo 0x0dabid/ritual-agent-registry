@@ -1,0 +1,25 @@
+[project]
+name = "ritual-agent-registry"
+version = "0.1.0"
+description = "CLI and tools for Ritual Agent Registry & Reputation Tracker"
+authors = [{name="0x0dabid", email="0x0dabid@github.com"}]
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1.0",
+    "web3>=6.0.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "eth-account>=0.11.0",
+    "rich>=13.7.0",
+]
+
+[project.scripts]
+ritual-agents = "ritual_agent_registry.cli.ritual_agents:cli"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]

@@ -1,0 +1,26 @@
+{
+  "name": "ritual-agent-registry-contracts",
+  "version": "0.1.0",
+  "description": "Smart contracts for Ritual Agent Registry & Reputation Tracker",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx asb",
+    "abi": "npx asb --abi",
+    "test": "npx hardhat test",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.ts\"",
+    "deploy:devnet": "npx hardhat run scripts/deploy.js --network devnet",
+    "deploy:mainnet": "npx hardhat run scripts/deploy.js --network mainnet"
+  },
+  "devDependencies": {
+    "@as-pect/cli": "^6.2.4",
+    "@ritual-net/hardhat-ritual": "^0.1.0",
+    "@types/node": "^20.0.0",
+    "assemblyscript": "^0.27.0",
+    "hardhat": "^2.19.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "ritual-contracts": "^0.1.0"  # hypothetical official package
+  }
+}

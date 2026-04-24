@@ -1,0 +1,13 @@
+{
+  "name": "Sample Renderer",
+  "version": "0.1.0",
+  "description": "Minimal demo agent for Ritual Agent Registry \u2014 echoes tasks",
+  "capabilities": [
+    "video-rendering",
+    "manim",
+    "echo"
+  ],
+  "author": "0x0dabid",
+  "license": "MIT",
+  "repository": "https://github.com/0x0dabid/ritual-agent-registry"
+}

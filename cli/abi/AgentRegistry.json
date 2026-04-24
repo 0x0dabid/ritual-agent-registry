@@ -1,0 +1,143 @@
+# Ritual Agent Registry — Complete ABI & TypeScript Definitions
+# Generated from AssemblyScript contract + manual additions for web frontend
+
+# Primary contract ABI (read/write functions)
+AGENT_REGISTRY_ABI = [
+  # ─── Views ────────────────────────────────────────────────────────────────────
+  {
+    "inputs": [{"name": "agent", "type": "address"}],
+    "name": "getAgent",
+    "outputs": [
+      {"name": "owner", "type": "address"},
+      {"name": "name", "type": "string"},
+      {"name": "endpoint", "type": "string"},
+      {"name": "codeHash", "type": "bytes32"},
+      {"name": "capabilities", "type": "string[]"},
+      {"name": "metadataURI", "type": "string"},
+      {"name": "registeredAt", "type": "uint64"},
+      {"name": "lastHeartbeat", "type": "uint64"},
+      {"name": "active", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "capability", "type": "string"}],
+    "name": "getAgentsByCapability",
+    "outputs": [{"name": "", "type": "address[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "agentCount",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "index", "type": "uint256"}],
+    "name": "getAgentAtIndex",
+    "outputs": [
+      {"name": "agent", "type": "address"},
+      {"name": "exists", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "agent", "type": "address"}, {"name": "category", "type": "string"}],
+    "name": "getAgentReputation",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "codeHash", "type": "bytes32"}],
+    "name": "isCodeHashRegistered",
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+
+  # ─── Mutative ─────────────────────────────────────────────────────────────────
+  {
+    "inputs": [
+      {"name": "name", "type": "string"},
+      {"name": "endpoint", "type": "string"},
+      {"name": "codeHash", "type": "bytes32"},
+      {"name": "capabilities", "type": "string[]"},
+      {"name": "metadataURI", "type": "string"}
+    ],
+    "name": "registerAgent",
+    "outputs": [{"name": "", "type": "address"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "agent", "type": "address"}],
+    "name": "heartbeat",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"name": "taskId", "type": "string"},
+      {"name": "outcome", "type": "string"},
+      {"name": "metrics", "type": "string"}
+    ],
+    "name": "submitTaskCompletion",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "agent", "type": "address"}, {"name": "active", "type": "bool"}],
+    "name": "setActive",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "agent", "type": "address"}, {"name": "newEndpoint", "type": "string"}],
+    "name": "updateEndpoint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+
+  # ─── Events ────────────────────────────────────────────────────────────────────
+  {
+    "anonymous": False,
+    "inputs": [
+      {"indexed": True, "name": "agent", "type": "address"},
+      {"indexed": True, "name": "owner", "type": "address"},
+      {"name": "name", "type": "string"}
+    ],
+    "name": "AgentRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": False,
+    "inputs": [
+      {"indexed": True, "name": "agent", "type": "address"},
+      {"name": "taskId", "type": "string"},
+      {"name": "outcome", "type": "string"},
+      {"name": "delta", "type": "int256"}
+    ],
+    "name": "TaskCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": False,
+    "inputs": [
+      {"indexed": True, "name": "agent", "type": "address"},
+      {"name": "category", "type": "string"},
+      {"name": "newScore", "type": "uint256"},
+      {"name": "delta", "type": "int256"}
+    ],
+    "name": "ReputationUpdated",
+    "type": "event"
+  }
+]

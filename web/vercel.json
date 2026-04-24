@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_RITUAL_CHAIN_ID": "11022",
+    "NEXT_PUBLIC_RITUAL_RPC_URL": "https://devnet.ritual.network"
+  }
+}
