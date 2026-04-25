@@ -4,10 +4,35 @@ import { useState } from 'react';
 import { useAccount, useConnect, useWalletClient } from 'wagmi';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { agentRegistryAbi, publicClient, ritualChain, getAgentsByOwner } from '../../lib/ritual';
-import { Agent } from '../../lib/types';
+import { agentRegistryAbi, publicClient, ritualChain } from '../../lib/ritual';
 
 const EMPTY_CODE_HASH = `0x${'0'.repeat(64)}` as `0x${string}`;
+const EXPLORER_API = 'https://explorer.ritual.network';
+
+interface DeployedContract {
+  address: string;
+  txHash: string;
+  blockNumber: string;
+  timestamp: string;
+}
+
+async function fetchDeployedContracts(walletAddress: string): Promise<DeployedContract[]> {
+  const res = await fetch(
+    `${EXPLORER_API}/api?module=account&action=txlist&address=${walletAddress}&sort=desc`
+  );
+  const data = await res.json();
+
+  if (data.status !== '1' || !Array.isArray(data.result)) return [];
+
+  return data.result
+    .filter((tx: any) => tx.contractAddress && tx.contractAddress !== '')
+    .map((tx: any) => ({
+      address: tx.contractAddress,
+      txHash: tx.hash,
+      blockNumber: tx.blockNumber,
+      timestamp: tx.timeStamp,
+    }));
+}
 
 export default function RegisterAgentPage() {
   const { isConnected, address } = useAccount();
@@ -16,30 +41,35 @@ export default function RegisterAgentPage() {
   const router = useRouter();
 
   const [name, setName] = useState('');
+  const [selected, setSelected] = useState<DeployedContract | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [myAgents, setMyAgents] = useState<Agent[] | null>(null);
-  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [contracts, setContracts] = useState<DeployedContract[] | null>(null);
+  const [loadingContracts, setLoadingContracts] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const handleLoadAgents = async () => {
+  const handleLoad = async () => {
     if (!address) return;
-    setLoadingAgents(true);
-    setMyAgents(null);
+    setLoadingContracts(true);
+    setContracts(null);
+    setLoadError(null);
+    setSelected(null);
     try {
-      const agents = await getAgentsByOwner(address);
-      setMyAgents(agents);
-    } catch {
-      setMyAgents([]);
+      const result = await fetchDeployedContracts(address);
+      setContracts(result);
+    } catch (err: any) {
+      setLoadError('Could not reach the Ritual Chain explorer. Check your connection.');
+      setContracts([]);
     } finally {
-      setLoadingAgents(false);
+      setLoadingContracts(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isConnected || !walletClient || !address) return;
+    if (!isConnected || !walletClient || !address || !selected) return;
 
     setSubmitting(true);
     setError(null);
@@ -51,7 +81,7 @@ export default function RegisterAgentPage() {
         abi: agentRegistryAbi,
         functionName: 'registerAgent',
         chain: ritualChain,
-        args: [name, address, EMPTY_CODE_HASH, [], ''],
+        args: [name, selected.address, EMPTY_CODE_HASH, [], ''],
       });
       setTxHash(hash);
       await publicClient.waitForTransactionReceipt({ hash });
@@ -73,7 +103,7 @@ export default function RegisterAgentPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-display font-bold text-gray-300 mb-4">Connect Your Wallet</h1>
-          <p className="text-gray-400 mb-8 leading-relaxed">Connect your wallet to register an agent on Ritual Chain.</p>
+          <p className="text-gray-400 mb-8">Connect your wallet to register an agent on Ritual Chain.</p>
           <button
             onClick={() => {
               const injected = connectors.find(c => c.id === 'injected');
@@ -102,24 +132,24 @@ export default function RegisterAgentPage() {
 
         <div className="text-center mb-10">
           <h1 className="text-3xl font-display font-bold text-ritual-lime mb-3">Register Agent</h1>
-          <p className="text-gray-400">Load your on-chain agents or register a new one.</p>
+          <p className="text-gray-400">Load your deployed contracts from Ritual Chain, pick one, and register it.</p>
         </div>
 
         <div className="space-y-4">
 
-          {/* Wallet + Load My Agents */}
+          {/* Step 1 — Wallet + Load */}
           <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 shadow-card">
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">Wallet Address</label>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Step 1 — Your Wallet</p>
             <div className="flex items-center gap-3">
               <div className="flex-1 px-4 py-3 bg-ritual-surface border border-gray-800 rounded-lg font-mono text-sm text-ritual-lime truncate">
                 {address}
               </div>
               <button
-                onClick={handleLoadAgents}
-                disabled={loadingAgents}
+                onClick={handleLoad}
+                disabled={loadingContracts}
                 className="flex-shrink-0 btn-secondary text-sm disabled:opacity-50 flex items-center gap-2"
               >
-                {loadingAgents
+                {loadingContracts
                   ? <div className="w-4 h-4 border-2 border-ritual-pink border-t-transparent rounded-full animate-spin" />
                   : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -130,112 +160,134 @@ export default function RegisterAgentPage() {
             </div>
           </div>
 
-          {/* On-chain agents for this wallet */}
-          {myAgents !== null && (
+          {/* Step 2 — Pick a deployed contract */}
+          {contracts !== null && (
             <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 shadow-card">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-4">
-                {myAgents.length === 0
-                  ? 'No agents found on-chain for this wallet'
-                  : `${myAgents.length} agent${myAgents.length !== 1 ? 's' : ''} found on Ritual Chain`}
+                Step 2 — Select a Deployed Agent
               </p>
 
-              {myAgents.length === 0 ? (
-                <p className="text-gray-500 text-sm">This wallet has no registered agents yet. Use the form below to create one.</p>
+              {loadError && (
+                <p className="text-red-400 text-sm mb-3">{loadError}</p>
+              )}
+
+              {contracts.length === 0 && !loadError ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 text-sm">No deployed contracts found for this wallet on Ritual Chain.</p>
+                  <a
+                    href={`${EXPLORER_API}/address/${address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-ritual-green text-xs font-mono hover:underline mt-2 inline-block"
+                  >
+                    View on explorer →
+                  </a>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  {myAgents.map(agent => (
-                    <Link
-                      key={agent.address}
-                      href={`/agent/${agent.address}`}
-                      className="flex items-center justify-between p-4 rounded-xl border border-gray-800 hover:border-ritual-green/40 bg-ritual-surface hover:bg-ritual-green/5 transition-all group"
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {contracts.map(contract => (
+                    <button
+                      key={contract.address}
+                      onClick={() => setSelected(contract)}
+                      className={`w-full text-left p-4 rounded-xl border transition-all ${
+                        selected?.address === contract.address
+                          ? 'border-ritual-green/50 bg-ritual-green/5'
+                          : 'border-gray-800 hover:border-gray-600 bg-ritual-surface'
+                      }`}
                     >
-                      <div>
-                        <p className="text-gray-300 font-semibold group-hover:text-ritual-green transition-colors">
-                          {agent.name}
-                        </p>
-                        <p className="font-mono text-xs text-gray-500 mt-1">
-                          {agent.address.slice(0, 10)}...{agent.address.slice(-8)}
-                        </p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-mono text-sm text-ritual-lime">
+                            {contract.address.slice(0, 10)}...{contract.address.slice(-8)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Block #{contract.blockNumber} · {new Date(Number(contract.timestamp) * 1000).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {selected?.address === contract.address && (
+                          <svg className="w-5 h-5 text-ritual-green flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
                       </div>
-                      <div className="flex items-center gap-3">
-                        {agent.active
-                          ? <span className="badge badge-green">Active</span>
-                          : <span className="badge badge-red">Inactive</span>
-                        }
-                        <svg className="w-4 h-4 text-gray-600 group-hover:text-ritual-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               )}
             </div>
           )}
 
-          {/* Register new agent */}
-          <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 shadow-card">
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-5">Register New Agent</p>
+          {/* Step 3 — Name + Register */}
+          {selected && (
+            <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 shadow-card">
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-5">Step 3 — Name & Register</p>
 
-            {error && (
-              <div className="mb-5 bg-red-900/20 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm flex items-start gap-3">
-                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{error}</span>
-              </div>
-            )}
-
-            {txHash && (
-              <div className="mb-5 bg-ritual-green/10 border border-ritual-green/30 rounded-xl p-6 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-ritual-green/20 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-ritual-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              {error && (
+                <div className="mb-5 bg-red-900/20 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm flex items-start gap-3">
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                  <span>{error}</span>
                 </div>
-                <p className="text-ritual-green font-semibold mb-2">Agent registered!</p>
-                <p className="font-mono text-xs text-gray-400 break-all">{txHash}</p>
-                <p className="text-gray-500 text-sm mt-3">Redirecting...</p>
-              </div>
-            )}
+              )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">Agent Name</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="e.g., My AI Agent"
-                  className="input-field"
-                  disabled={submitting}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitting || !name.trim()}
-                className="w-full py-3 rounded-lg btn-primary font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-ritual-green border-t-transparent rounded-full animate-spin" />
-                    {txHash ? 'Confirming on-chain...' : 'Broadcasting...'}
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              {txHash && (
+                <div className="mb-5 bg-ritual-green/10 border border-ritual-green/30 rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-ritual-green/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-ritual-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Register Agent
-                  </>
-                )}
-              </button>
+                  </div>
+                  <p className="text-ritual-green font-semibold mb-2">Agent registered!</p>
+                  <p className="font-mono text-xs text-gray-400 break-all">{txHash}</p>
+                  <p className="text-gray-500 text-sm mt-3">Redirecting...</p>
+                </div>
+              )}
 
-              <p className="text-xs text-gray-600 text-center">Requires RITUAL for gas.</p>
-            </form>
-          </div>
+              {/* Selected agent summary */}
+              <div className="mb-5 px-4 py-3 bg-ritual-surface border border-ritual-green/20 rounded-xl">
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Selected Agent</p>
+                <p className="font-mono text-sm text-ritual-lime break-all">{selected.address}</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">Agent Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="e.g., My AI Agent"
+                    className="input-field"
+                    disabled={submitting}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting || !name.trim()}
+                  className="w-full py-3 rounded-lg btn-primary font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-ritual-green border-t-transparent rounded-full animate-spin" />
+                      {txHash ? 'Confirming on-chain...' : 'Broadcasting...'}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Register Agent
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-gray-600 text-center">Requires RITUAL for gas.</p>
+              </form>
+            </div>
+          )}
 
         </div>
       </div>
