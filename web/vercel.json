@@ -6,12 +6,6 @@
       "use": "@vercel/next"
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ],
   "env": {
     "NEXT_PUBLIC_RITUAL_CHAIN_ID": "1979",
     "NEXT_PUBLIC_RITUAL_RPC_URL": "https://rpc.ritualfoundation.org/",
