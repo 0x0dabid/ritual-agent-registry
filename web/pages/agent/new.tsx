@@ -9,6 +9,10 @@ import { agentRegistryAbi, publicClient, ritualChain } from '../../lib/ritual';
 const EMPTY_CODE_HASH = `0x${'0'.repeat(64)}` as `0x${string}`;
 const EXPLORER_API = 'https://explorer.ritual.network';
 
+// Ritual precompile addresses occupy 0x0800–0x082F range
+const isRitualPrecompile = (addr: string) =>
+  /^0x0{37}0*08[0-2][0-9a-f]$/i.test(addr.toLowerCase().padStart(42, '0'));
+
 interface DeployedContract {
   address: string;
   txHash: string;
@@ -16,15 +20,27 @@ interface DeployedContract {
   timestamp: string;
 }
 
-async function fetchDeployedContracts(walletAddress: string): Promise<DeployedContract[]> {
+async function hasPrecompileInteraction(contractAddress: string): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${EXPLORER_API}/api?module=account&action=txlistinternal&address=${contractAddress}&sort=desc`
+    );
+    const data = await res.json();
+    if (data.status !== '1' || !Array.isArray(data.result)) return false;
+    return data.result.some((tx: any) => isRitualPrecompile(tx.to || ''));
+  } catch {
+    return false;
+  }
+}
+
+async function fetchDeployedAgents(walletAddress: string): Promise<DeployedContract[]> {
   const res = await fetch(
     `${EXPLORER_API}/api?module=account&action=txlist&address=${walletAddress}&sort=desc`
   );
   const data = await res.json();
-
   if (data.status !== '1' || !Array.isArray(data.result)) return [];
 
-  return data.result
+  const deployed: DeployedContract[] = data.result
     .filter((tx: any) => tx.contractAddress && tx.contractAddress !== '')
     .map((tx: any) => ({
       address: tx.contractAddress,
@@ -32,6 +48,10 @@ async function fetchDeployedContracts(walletAddress: string): Promise<DeployedCo
       blockNumber: tx.blockNumber,
       timestamp: tx.timeStamp,
     }));
+
+  // Filter to only contracts that have called Ritual precompiles
+  const checks = await Promise.all(deployed.map(c => hasPrecompileInteraction(c.address)));
+  return deployed.filter((_, i) => checks[i]);
 }
 
 export default function RegisterAgentPage() {
@@ -57,7 +77,7 @@ export default function RegisterAgentPage() {
     setLoadError(null);
     setSelected(null);
     try {
-      const result = await fetchDeployedContracts(address);
+      const result = await fetchDeployedAgents(address);
       setContracts(result);
     } catch (err: any) {
       setLoadError('Could not reach the Ritual Chain explorer. Check your connection.');
@@ -173,7 +193,7 @@ export default function RegisterAgentPage() {
 
               {contracts.length === 0 && !loadError ? (
                 <div className="text-center py-4">
-                  <p className="text-gray-500 text-sm">No deployed contracts found for this wallet on Ritual Chain.</p>
+                  <p className="text-gray-500 text-sm">No Ritual agent contracts found for this wallet. Deploy an agent contract that calls a Ritual precompile first.</p>
                   <a
                     href={`${EXPLORER_API}/address/${address}`}
                     target="_blank"
