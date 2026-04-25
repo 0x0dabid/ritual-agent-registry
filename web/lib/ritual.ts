@@ -164,6 +164,11 @@ export async function getReputation(agentAddress: string, category?: string): Pr
   }
 }
 
+export async function getAgentsByOwner(ownerAddress: string): Promise<Agent[]> {
+  const agents = await getAllAgents();
+  return agents.filter(a => a.owner.toLowerCase() === ownerAddress.toLowerCase());
+}
+
 export async function getAllAgents(): Promise<Agent[]> {
   const addr = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
   if (!addr) throw new Error('NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS not set');
