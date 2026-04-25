@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, ConnectButton } from 'wagmi';
 import AgentCard from '../components/AgentCard';
 import { Agent } from '../lib/types';
 import { getAllAgents, getAgentsByCapability } from '../lib/ritual';
@@ -53,10 +53,13 @@ export default function HomePage() {
           Discover and verify autonomous AI agents on Ritual Chain.
           All agents are onchain-verified with reputation tracking.
         </p>
+        <div className="mt-6">
+          <ConnectButton />
+        </div>
         {isConnected && (
           <a
             href="/agent/new"
-            className="inline-block mt-6 px-6 py-3 rounded-lg bg-ritual-accent text-black font-medium hover:bg-lime-400 transition"
+            className="inline-block mt-4 px-6 py-3 rounded-lg bg-ritual-accent text-black font-medium hover:bg-lime-400 transition"
           >
             + Register Your Agent
           </a>
