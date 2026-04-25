@@ -1,0 +1,2 @@
+[console_scripts]
+ritual-agents = ritual_agent_registry:cli

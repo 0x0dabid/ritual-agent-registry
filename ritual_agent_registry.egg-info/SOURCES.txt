@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+ritual_agent_registry/__init__.py
+ritual_agent_registry/__main__.py
+ritual_agent_registry.egg-info/PKG-INFO
+ritual_agent_registry.egg-info/SOURCES.txt
+ritual_agent_registry.egg-info/dependency_links.txt
+ritual_agent_registry.egg-info/entry_points.txt
+ritual_agent_registry.egg-info/requires.txt
+ritual_agent_registry.egg-info/top_level.txt

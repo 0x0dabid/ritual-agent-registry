@@ -1,0 +1,1 @@
+ritual_agent_registry

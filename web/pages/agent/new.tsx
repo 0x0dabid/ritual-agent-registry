@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { useAccount, useConnect, useWalletClient } from 'wagmi';
-import { ethers } from 'ethers';
 import { useRouter } from 'next/router';
-import { agentRegistryAbi } from '../lib/ritual';
+import { agentRegistryAbi, publicClient, ritualChain } from '../../lib/ritual';
 
 const CAPABILITIES = [
   'llm-inference', 'video-generation', 'image-generation', 'audio',
@@ -72,28 +71,27 @@ export default function RegisterAgentPage() {
       setStep('broadcasting');
 
       // 2. Prepare contract call
-      const chainId = Number(process.env.NEXT_PUBLIC_RITUAL_CHAIN_ID || '1979');
-      const contractAddress = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS!;
+      const contractAddress = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS! as `0x${string}`;
 
-      // 3. Build transaction
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RITUAL_RPC_URL!);
-      const signer = new ethers.Signer(await walletClient.getAccount(), provider);
-      const contract = new ethers.Contract(contractAddress, agentRegistryAbi, signer);
-
-      // 4. Send transaction
-      const tx = await contract.registerAgent(
-        form.name,
-        form.endpoint,
-        codeHash,
-        form.capabilities,
-        form.metadataURI || 'ipfs://QmPlaceholder'
-      );
-
-      setTxHash(tx.hash);
+      // 3. Send transaction via walletClient (viem)
+      const txHash = await walletClient.writeContract({
+        address: contractAddress,
+        abi: agentRegistryAbi,
+        functionName: 'registerAgent',
+        chain: ritualChain,
+        args: [
+          form.name,
+          form.endpoint,
+          codeHash,
+          form.capabilities,
+          form.metadataURI || 'ipfs://QmPlaceholder'
+        ],
+      });
+      setTxHash(txHash);
       setStep('confirming');
 
-      // 5. Wait for confirmation
-      await tx.wait();
+      // 4. Wait for confirmation
+      await publicClient.waitForTransactionReceipt({ hash: txHash });
 
       setStep('idle');
       setSubmitting(false);

@@ -63,7 +63,7 @@
   }
 
   .card:hover {
-    @apply border-gray-700 shadow-glow-green/20;
+    @apply border-gray-700 shadow-glow-green;
     transform: translateY(-2px);
   }
 

@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+cli/ritual_agent_registry.egg-info/PKG-INFO
+cli/ritual_agent_registry.egg-info/SOURCES.txt
+cli/ritual_agent_registry.egg-info/dependency_links.txt
+cli/ritual_agent_registry.egg-info/entry_points.txt
+cli/ritual_agent_registry.egg-info/requires.txt
+cli/ritual_agent_registry.egg-info/top_level.txt

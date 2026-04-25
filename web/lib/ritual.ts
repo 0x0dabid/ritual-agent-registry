@@ -11,8 +11,7 @@ export const ritualChain = defineChain({
   rpcUrls: { default: { http: [rpcUrl] } },
 }) as any;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const publicClient = createPublicClient({
+export const publicClient = createPublicClient({
   chain: ritualChain,
   transport: http(rpcUrl),
 });
