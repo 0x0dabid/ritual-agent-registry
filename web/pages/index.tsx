@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import AgentCard from '../components/AgentCard';
+import WalletConnectButton from '../components/WalletConnectButton';
 import { Agent } from '../lib/types';
-import { getAllAgents, getAgentsByCapability } from '../lib/ritual';
-import { useQuery } from '@tanstack/react-query';
+import { getAllAgents } from '../lib/ritual';
 
 export default function HomePage() {
   const { isConnected } = useAccount();
@@ -13,7 +13,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all agents from contract
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -31,10 +30,8 @@ export default function HomePage() {
     load();
   }, []);
 
-  // Extract unique capabilities for filter dropdown
   const allCaps = Array.from(new Set(allAgents.flatMap(a => a.capabilities))).sort();
 
-  // Apply filters
   const filtered = allAgents.filter(a => {
     const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase()) ||
                          (a.endpoint || '').toLowerCase().includes(search.toLowerCase());
@@ -46,7 +43,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-ritual-black text-gray-300 font-body">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 sm:py-32">
-        {/* Mesh gradient background */}
         <div className="absolute inset-0 bg-mesh-gradient opacity-60" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-ritual-green/10 via-transparent to-transparent" />
         <div className="absolute inset-0 bg-noise opacity-30" />
@@ -74,32 +70,18 @@ export default function HomePage() {
 
             {/* CTA + Connect */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <div className="wallet-connect-wrapper">
-                {/* ConnectButton from wagmi will render here */}
-              </div>
+              <WalletConnectButton />
 
               {isConnected && (
-                <>
-                  <a
-                    href="/agent/new"
-                    className="group inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-ritual-green text-ritual-green hover:bg-ritual-green/10 hover:shadow-glow-green transition-all duration-200 font-semibold"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Register Your Agent
-                  </a>
-
-                  <button
-                    onClick={() => window.location.href = '/agent/new'}
-                    className="inline-flex items-center gap-2 px-4 py-3 rounded-lg border border-ritual-pink text-ritual-pink hover:bg-ritual-pink/10 hover:shadow-glow-pink transition-all text-sm"
-                  >
-                    Learn how it works
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </>
+                <a
+                  href="/agent/new"
+                  className="group inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-ritual-green text-ritual-green hover:bg-ritual-green/10 hover:shadow-glow-green transition-all duration-200 font-semibold"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Register Your Agent
+                </a>
               )}
             </div>
 
@@ -222,17 +204,17 @@ export default function HomePage() {
         )}
 
         {/* Footer CTA */}
-        {!isConnected && allAgents.length === 0 && (
+        {!isConnected && allAgents.length === 0 && !loading && (
           <div className="mt-20 text-center">
-            <div className="bg-ritual-elevated border border-ritual-pink/30 rounded-2xl p-8 max-w-2xl mx-auto shadow-card">
+            <div className="bg-ritual-elevated border border-ritual-pink/30 rounded-xl p-8 max-w-2xl mx-auto shadow-card">
               <h2 className="text-2xl font-display font-bold text-ritual-lime mb-4">
                 Ready to deploy your agent?
               </h2>
-              <p className="text-gray-300 mb-6 leading-relaxed">
+              <p className="text-gray-400 mb-6 leading-relaxed">
                 Connect your wallet to register an autonomous AI agent on the Ritual Chain registry.
                 Your agent&apos;s code hash is stored on-chain for verification.
               </p>
-              <div className="wallet-connect-wrapper" />
+              <WalletConnectButton />
             </div>
           </div>
         )}

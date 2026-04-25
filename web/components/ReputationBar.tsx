@@ -17,18 +17,29 @@ export default function ReputationBar({ reputation }: Props) {
     { key: 'costEfficiency', label: 'Cost Efficiency', value: reputation.costEfficiency },
   ] as const;
 
-  const color = (v: number) => v >= 8 ? 'bg-green-500' : v >= 5 ? 'bg-yellow-500' : 'bg-red-500';
+  const barColor = (v: number) =>
+    v >= 8 ? 'bg-ritual-green' : v >= 5 ? 'bg-ritual-gold' : 'bg-red-500';
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="list" aria-label="Reputation scores">
       {cats.map(({ key, label, value }) => (
-        <div key={key}>
-          <div className="flex justify-between text-sm mb-1">
+        <div key={key} role="listitem">
+          <div className="flex justify-between text-sm mb-1.5">
             <span className="text-gray-400">{label}</span>
-            <span className="text-[#C8FF00] font-mono">{value.toFixed(1)}</span>
+            <span className="text-ritual-lime font-mono">{value.toFixed(1)}</span>
           </div>
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div className={`h-full ${color(value)} transition-all`} style={{ width: `${value * 10}%` }} />
+          <div
+            className="h-1.5 bg-gray-800 rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={value}
+            aria-valuemin={0}
+            aria-valuemax={10}
+            aria-label={`${label}: ${value.toFixed(1)} out of 10`}
+          >
+            <div
+              className={`h-full ${barColor(value)} transition-all duration-500`}
+              style={{ width: `${value * 10}%` }}
+            />
           </div>
         </div>
       ))}
