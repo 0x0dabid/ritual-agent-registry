@@ -1,5 +1,3 @@
-"use client";
-
 import { Agent } from '../lib/types';
 import Link from 'next/link';
 
@@ -8,20 +6,16 @@ interface AgentCardProps {
 }
 
 export default function AgentCard({ agent }: AgentCardProps) {
-  // Format timestamp
   const registeredDate = new Date(agent.registeredAt * 1000).toLocaleDateString('en-US', {
     month: 'short',
     year: 'numeric',
   });
 
-  // Truncate address for display
   const shortAddress = `${agent.address.slice(0, 6)}...${agent.address.slice(-4)}`;
-
-  // Determine reputation status
   const isActive = agent.active;
 
   return (
-    <div className="group card p-6 hover:shadow-glow-green transition-all duration-300 relative">
+    <Link href={`/agent/${agent.address}`} className="group card p-6 hover:shadow-glow-green transition-all duration-300 relative block">
       {/* Left accent border */}
       <div className="absolute left-0 top-4 bottom-4 w-1 rounded-full bg-gradient-to-b from-ritual-green via-ritual-pink to-ritual-gold opacity-60 group-hover:opacity-100 transition-opacity" />
 
@@ -34,7 +28,6 @@ export default function AgentCard({ agent }: AgentCardProps) {
           <p className="text-xs font-mono address mt-1">{shortAddress}</p>
         </div>
 
-        {/* Active status badge */}
         {isActive ? (
           <span className="badge badge-green flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-ritual-green animate-pulse-green" />
@@ -46,17 +39,14 @@ export default function AgentCard({ agent }: AgentCardProps) {
       </div>
 
       {/* Endpoint */}
-      <div className="mb-4">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Endpoint</p>
-        <a
-          href={agent.endpoint}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-ritual-lime hover:underline font-mono break-all block"
-        >
-          {agent.endpoint}
-        </a>
-      </div>
+      {agent.endpoint && (
+        <div className="mb-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Endpoint</p>
+          <p className="text-sm text-ritual-lime font-mono break-all line-clamp-1">
+            {agent.endpoint}
+          </p>
+        </div>
+      )}
 
       {/* Capabilities */}
       <div className="mb-4">
@@ -84,8 +74,8 @@ export default function AgentCard({ agent }: AgentCardProps) {
         <span className="text-gray-500">{registeredDate}</span>
       </div>
 
-      {/* Hover overlay with View link */}
+      {/* Hover border overlay */}
       <div className="absolute inset-0 border border-ritual-green/0 rounded-xl transition-all duration-200 group-hover:border-ritual-green/30 pointer-events-none" />
-    </div>
+    </Link>
   );
 }

@@ -2,16 +2,30 @@ interface Props {
   capability: string;
 }
 
+// Pink = AI/inference precompiles, Green = data/utility, Gold = scheduling
+const styles: Record<string, string> = {
+  'llm-inference':      'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'video-generation':   'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'image-generation':   'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'audio':              'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'multimodal':         'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'stable-diffusion':   'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'whisper':            'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'transcription':      'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'text-gen':           'bg-ritual-pink/10 text-ritual-pink border-ritual-pink/20',
+  'embedding':          'bg-ritual-green/10 text-ritual-green border-ritual-green/20',
+  'http':               'bg-ritual-green/10 text-ritual-green border-ritual-green/20',
+  'oracle':             'bg-ritual-green/10 text-ritual-green border-ritual-green/20',
+  'testing':            'bg-ritual-green/10 text-ritual-green border-ritual-green/20',
+  'manim':              'bg-ritual-lime/10 text-ritual-lime border-ritual-lime/20',
+  'telegram-notify':    'bg-ritual-gold/10 text-ritual-gold border-ritual-gold/20',
+};
+
 export default function CapabilityBadge({ capability }: Props) {
-  const base = "px-2 py-1 rounded-full text-xs font-medium border ";
-  const styles: Record<string, string> = {
-    'llm-inference': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-    'video-generation': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-    'image-generation': 'bg-pink-500/20 text-pink-300 border-pink-500/30',
-    'audio': 'bg-green-500/20 text-green-300 border-green-500/30',
-    'manim': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
-    'default': 'bg-gray-800 text-gray-300 border-gray-600',
-  };
-  const style = styles[capability] || styles.default;
-  return <span className={`${base}${style}`}>{capability}</span>;
+  const style = styles[capability] ?? 'bg-gray-800 text-gray-400 border-gray-700';
+  return (
+    <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${style}`}>
+      {capability}
+    </span>
+  );
 }

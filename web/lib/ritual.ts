@@ -16,171 +16,164 @@ export const publicClient = createPublicClient({
   transport: http(rpcUrl),
 });
 
-/**
- * ABI slice for reading Agent structs.
- */
 export const agentRegistryAbi = [
   {
-    inputs: [{ internalType: 'uint256', name: 'index', type: 'uint256' }],
-    name: 'agents',
+    inputs: [{ name: 'agent', type: 'address' }],
+    name: 'getAgent',
     outputs: [
-      { internalType: 'address', name: 'owner', type: 'address' },
-      { internalType: 'string', name: 'name', type: 'string' },
-      { internalType: 'string', name: 'capabilities', type: 'string' },
-      { internalType: 'uint256', name: 'createdAt', type: 'uint256' },
+      { name: 'owner', type: 'address' },
+      { name: 'name', type: 'string' },
+      { name: 'endpoint', type: 'string' },
+      { name: 'codeHash', type: 'bytes32' },
+      { name: 'capabilities', type: 'string[]' },
+      { name: 'metadataURI', type: 'string' },
+      { name: 'registeredAt', type: 'uint64' },
+      { name: 'lastHeartbeat', type: 'uint64' },
+      { name: 'active', type: 'bool' },
     ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'getAllAgents',
+    inputs: [{ name: 'index', type: 'uint256' }],
+    name: 'getAgentAtIndex',
     outputs: [
-      {
-        components: [
-          { internalType: 'address', name: 'owner', type: 'address' },
-          { internalType: 'string', name: 'name', type: 'string' },
-          { internalType: 'string', name: 'capabilities', type: 'string' },
-          { internalType: 'uint256', name: 'createdAt', type: 'uint256' },
-        ],
-        internalType: 'struct AgentRegistry.Agent[]',
-        name: '',
-        type: 'tuple[]',
-      },
+      { name: 'agent', type: 'address' },
+      { name: 'exists', type: 'bool' },
     ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ internalType: 'address', name: '', type: 'address' }],
-    name: 'addressToIndex',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [],
     name: 'agentCount',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'agent', type: 'address' },
+      { name: 'category', type: 'string' },
+    ],
+    name: 'getAgentReputation',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'name', type: 'string' },
+      { name: 'endpoint', type: 'string' },
+      { name: 'codeHash', type: 'bytes32' },
+      { name: 'capabilities', type: 'string[]' },
+      { name: 'metadataURI', type: 'string' },
+    ],
+    name: 'registerAgent',
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'agent', type: 'address' }],
+    name: 'heartbeat',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
 ] as const;
 
-/**
- * Fetch a single agent by index from the chain.
- */
-export async function fetchAgent(contractAddress: string, index: bigint) {
-  const raw = await (publicClient as any).readContract({
+export async function fetchAgent(contractAddress: string, agentAddress: string): Promise<Agent> {
+  const result = await (publicClient as any).readContract({
     address: contractAddress as `0x${string}`,
     abi: agentRegistryAbi,
-    functionName: 'agents',
-    args: [index],
+    functionName: 'getAgent',
+    args: [agentAddress as `0x${string}`],
   }) as any[];
-  const [owner, name, capabilitiesRaw, createdAt] = raw;
+
+  const [owner, name, endpoint, codeHash, capabilities, metadataURI, registeredAt, lastHeartbeat, active] = result;
+  const codeHashHex = typeof codeHash === 'string'
+    ? codeHash
+    : ('0x' + Array.from(codeHash as Uint8Array).map((b: number) => b.toString(16).padStart(2, '0')).join(''));
+
   return {
-    address: owner,
+    address: agentAddress,
     owner,
     name,
-    capabilities: (capabilitiesRaw || '').split(',').filter(Boolean),
-    registeredAt: Number(createdAt),
-    active: true,
+    endpoint,
+    codeHash: codeHashHex,
+    capabilities: Array.isArray(capabilities) ? capabilities : (capabilities || '').split(',').filter(Boolean),
+    metadataURI,
+    registeredAt: Number(registeredAt),
+    lastHeartbeat: Number(lastHeartbeat),
+    active,
   };
 }
 
-/**
- * Fetch all registered agents.
- */
-export async function fetchAllAgents(contractAddress: string) {
-  const raw = await (publicClient as any).readContract({
+export async function fetchAllAgents(contractAddress: string): Promise<Agent[]> {
+  const count = await (publicClient as any).readContract({
     address: contractAddress as `0x${string}`,
     abi: agentRegistryAbi,
-    functionName: 'getAllAgents',
-  }) as any[];
-  return (raw || []).map((agent: any) => {
-    const [owner, name, capabilitiesRaw, createdAt] = agent;
-    return {
-      address: owner,
-      owner,
-      name,
-      capabilities: (capabilitiesRaw || '').split(',').filter(Boolean),
-      registeredAt: Number(createdAt),
-      active: true,
-    };
-  });
+    functionName: 'agentCount',
+  }) as bigint;
+
+  const addresses: string[] = [];
+  for (let i = 0n; i < count; i++) {
+    const [agentAddr, exists] = await (publicClient as any).readContract({
+      address: contractAddress as `0x${string}`,
+      abi: agentRegistryAbi,
+      functionName: 'getAgentAtIndex',
+      args: [i],
+    }) as [string, boolean];
+    if (exists) addresses.push(agentAddr);
+  }
+
+  return Promise.all(addresses.map(addr => fetchAgent(contractAddress, addr)));
 }
 
-/**
- * Helper: get agent by owner address (looks up index from registry)
- */
-export async function getAgentByAddress(agentAddress: string) {
+export async function getAgentByAddress(agentAddress: string): Promise<Agent | null> {
   const contractAddress = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
   if (!contractAddress) throw new Error('NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS not set');
-  const indexResult = await (publicClient as any).readContract({
-    address: contractAddress as `0x${string}`,
-    abi: agentRegistryAbi,
-    functionName: 'addressToIndex',
-    args: [agentAddress as `0x${string}`],
-  }) as bigint;
-  if (indexResult === BigInt(0)) return null;
-  return fetchAgent(contractAddress, indexResult);
-}
-
-/**
- * Placeholder reputation — static score until on-chain reputation is added
- */
-export async function getReputation(agentAddress: string, _category?: string): Promise<number> {
-  const hash = BigInt('0x' + agentAddress.slice(2, 10));
-  return Number(hash % BigInt(1000)) / 10;
-}
-
-/** Compute a keccak256 hash of code (placeholder — uses simple hash for demo) */
-export async function computeCodeHash(code: string): Promise<string> {
-  // In production: use keccak256 from viem or ethers
-  let hash = 0;
-  for (let i = 0; i < code.length; i++) {
-    hash = ((hash << 5) - hash) + code.charCodeAt(i);
-    hash |= 0;
+  try {
+    return await fetchAgent(contractAddress, agentAddress);
+  } catch {
+    return null;
   }
-  return '0x' + Math.abs(hash).toString(16).padStart(64, '0');
 }
 
-/** Get the AgentRegistry contract instance info */
-
-
-
-/**
- * Get contract config with a registerAgent helper.
- * Caller must provide a walletClient with writeContract.
- */
-export function getContract() {
-  const address = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
-  if (!address) throw new Error('NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS not set');
-  return {
-    address: address as `0x${string}`,
-    abi: agentRegistryAbi,
-    // Thin wrapper — caller supplies a viem WalletClient
-    registerAgent: async (walletClient: any, name: string, endpoint: string, codeHash: string, capabilities: string[], metadataURI: string) => {
-      return walletClient.writeContract({
-        address: address as `0x${string}`,
-        abi: agentRegistryAbi,
-        functionName: 'registerAgent',
-          args: [name, endpoint, codeHash, capabilities.join(','), metadataURI],
-      });
-    },
-  };
+export async function getReputation(agentAddress: string, category?: string): Promise<number> {
+  const contractAddress = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
+  if (!contractAddress) {
+    const hash = BigInt('0x' + agentAddress.slice(2, 10));
+    return Number(hash % BigInt(1000)) / 10;
+  }
+  try {
+    const score = await (publicClient as any).readContract({
+      address: contractAddress as `0x${string}`,
+      abi: agentRegistryAbi,
+      functionName: 'getAgentReputation',
+      args: [agentAddress as `0x${string}`, category || 'reliability'],
+    }) as bigint;
+    return Number(score) / 10;
+  } catch {
+    const hash = BigInt('0x' + agentAddress.slice(2, 10));
+    return Number(hash % BigInt(1000)) / 10;
+  }
 }
 
-export async function getAllAgents() {
+export async function getAllAgents(): Promise<Agent[]> {
   const addr = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
   if (!addr) throw new Error('NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS not set');
   return fetchAllAgents(addr);
 }
 
-/** Return agents filtered by a capability string (exact match) */
-export async function getAgentsByCapability(capability: string) {
-  const addr = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
-  if (!addr) throw new Error('NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS not set');
-  const agents = await fetchAllAgents(addr);
+export async function getAgentsByCapability(capability: string): Promise<Agent[]> {
+  const agents = await getAllAgents();
   return agents.filter(a => a.capabilities.includes(capability));
+}
+
+export function getContract() {
+  const address = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
+  if (!address) throw new Error('NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS not set');
+  return { address: address as `0x${string}`, abi: agentRegistryAbi };
 }

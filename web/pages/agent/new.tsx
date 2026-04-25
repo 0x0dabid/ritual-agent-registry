@@ -82,9 +82,9 @@ export default function RegisterAgentPage() {
         args: [
           form.name,
           form.endpoint,
-          codeHash,
+          codeHash as `0x${string}`,
           form.capabilities,
-          form.metadataURI || 'ipfs://QmPlaceholder'
+          form.metadataURI || '',
         ],
       });
       setTxHash(txHash);
@@ -113,7 +113,7 @@ export default function RegisterAgentPage() {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-ritual-black flex items-center justify-center p-4">
-        <div className="bg-ritual-elevated border border-gray-800 rounded-2xl p-8 max-w-md w-full text-center shadow-card">
+        <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-8 max-w-md w-full text-center shadow-card">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-ritual-green/10 border border-ritual-green/30 flex items-center justify-center">
             <svg className="w-8 h-8 text-ritual-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L12 17h-1.145A4.963 4.963 0 0012 14a4.963 4.963 0 00-4.855 2.855A4.963 4.963 0 0012 14z" />
@@ -135,7 +135,7 @@ export default function RegisterAgentPage() {
               else if (connectors[0]) connect({ connector: connectors[0] });
             }}
             disabled={submitting}
-            className="w-full py-3 rounded-lg bg-ritual-green text-black font-semibold hover:bg-ritual-green/90 transition-all focus:ring-2 focus:ring-ritual-green/50 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50"
+            className="w-full btn-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ritual-green/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-50"
           >
             Connect Wallet
           </button>
@@ -164,7 +164,7 @@ export default function RegisterAgentPage() {
         </div>
 
         {/* Registration form */}
-        <div className="bg-ritual-elevated border border-gray-800 rounded-2xl p-6 sm:p-8 shadow-card">
+        <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 sm:p-8 shadow-card">
           {error && (
             <div className="mb-6 bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm flex items-start gap-3">
               <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

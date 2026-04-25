@@ -48,7 +48,7 @@ module.exports = {
       },
       backgroundImage: {
         'mesh-gradient': 'radial-gradient(at 0% 0%, rgba(25, 209, 132, 0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(255, 29, 206, 0.1) 0px, transparent 50%)',
-        'noise': 'url("/noise.png")',
+        'noise': 'url("/noise.svg")',
       },
     },
   },
