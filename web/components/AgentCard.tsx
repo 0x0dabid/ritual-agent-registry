@@ -1,38 +1,88 @@
 "use client";
 
+import { Agent } from '../lib/types';
 import Link from 'next/link';
-import type { Agent } from '../lib/types';
 
-interface Props {
+interface AgentCardProps {
   agent: Agent;
 }
 
-export default function AgentCard({ agent }: Props) {
+export default function AgentCard({ agent }: AgentCardProps) {
+  // Format timestamp
+  const registeredDate = new Date(agent.registeredAt * 1000).toLocaleDateString('en-US', {
+    month: 'short',
+    year: 'numeric',
+  });
+
+  // Truncate address for display
+  const shortAddress = `${agent.address.slice(0, 6)}...${agent.address.slice(-4)}`;
+
+  // Determine reputation status
+  const isActive = agent.active;
+
   return (
-    <Link href={`/agent/${agent.address}`}>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-ritual-accent/50 hover:shadow-[0_0_20px_rgba(200,255,0,0.3)] transition-all cursor-pointer">
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="font-semibold text-lg">{agent.name}</h3>
-            <p className="text-gray-500 text-sm font-mono">
-              {agent.address.slice(0, 6)}...{agent.address.slice(-4)}
-            </p>
-          </div>
-          <span className={`px-2 py-1 rounded-full text-xs ${agent.active ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-            {agent.active ? 'Active' : 'Inactive'}
-          </span>
+    <div className="group card p-6 hover:shadow-glow-green/10 transition-all duration-300">
+      {/* Header: Name + Status */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-display font-bold text-gray-300 truncate group-hover:text-ritual-green transition-colors">
+            {agent.name}
+          </h3>
+          <p className="text-xs font-mono address mt-1">{shortAddress}</p>
         </div>
 
-        <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-          {agent.capabilities.slice(0, 3).join(' • ')}
-          {agent.capabilities.length > 3 && ` • +${agent.capabilities.length - 3} more`}
-        </p>
+        {/* Active status badge */}
+        {isActive ? (
+          <span className="badge badge-green flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-ritual-green animate-pulse-green" />
+            Active
+          </span>
+        ) : (
+          <span className="badge badge-red">Inactive</span>
+        )}
+      </div>
 
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>{new Date(agent.registeredAt * 1000).toLocaleDateString()}</span>
-          <span className="text-[#C8FF00]">View →</span>
+      {/* Endpoint */}
+      <div className="mb-4">
+        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Endpoint</p>
+        <a
+          href={agent.endpoint}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-ritual-lime hover:underline font-mono break-all block"
+        >
+          {agent.endpoint}
+        </a>
+      </div>
+
+      {/* Capabilities */}
+      <div className="mb-4">
+        <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Capabilities</p>
+        <div className="flex flex-wrap gap-2">
+          {agent.capabilities.map((cap) => (
+            <span
+              key={cap}
+              className="px-2.5 py-1 rounded-md bg-ritual-pink/10 border border-ritual-pink/20 text-ritual-pink text-xs font-medium"
+            >
+              {cap}
+            </span>
+          ))}
         </div>
       </div>
-    </Link>
+
+      {/* Footer: Owner + Date */}
+      <div className="pt-4 border-t border-gray-800 flex items-center justify-between text-xs text-gray-500">
+        <div>
+          <span className="uppercase tracking-wider">Owner</span>
+          <span className="font-mono ml-2 text-gray-400">
+            {agent.owner.slice(0, 8)}...{agent.owner.slice(-6)}
+          </span>
+        </div>
+        <span className="text-gray-600">{registeredDate}</span>
+      </div>
+
+      {/* Hover overlay with View link */}
+      <div className="absolute inset-0 border border-ritual-green/0 rounded-xl transition-all duration-200 group-hover:border-ritual-green/30 pointer-events-none" />
+    </div>
   );
 }

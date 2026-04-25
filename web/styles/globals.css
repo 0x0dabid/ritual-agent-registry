@@ -2,43 +2,161 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Ritual Design System - Global Styles */
 
-:root {
-  --ritual-accent: #C8FF00;
-  --ritual-bg: #0A0A0A;
+@layer base {
+  :root {
+    --font-display: 'Archivo Black', system-ui, sans-serif;
+    --font-body: 'Barlow', 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ritual-black text-gray-300 font-body antialiased;
+  }
+
+  /* Custom glow text effect for hero */
+  .glow-text {
+    text-shadow:
+      0 0 20px rgba(191, 255, 0, 0.3),
+      0 0 40px rgba(191, 255, 0, 0.15),
+      0 0 60px rgba(191, 255, 0, 0.05);
+  }
+
+  /* Noise texture overlay */
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    pointer-events: none;
+  }
+
+  /* Floating animation for badges */
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Pulse green for status indicators */
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .animate-pulse-green {
+    animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
-body {
-  background-color: var(--ritual-bg);
-  color: #ffffff;
-  font-family: 'Inter', sans-serif;
+@layer components {
+  /* Ritual Card */
+  .card {
+    @apply bg-ritual-elevated border border-gray-800 rounded-xl shadow-card;
+    transition: all 0.2s ease;
+  }
+
+  .card:hover {
+    @apply border-gray-700 shadow-glow-green/20;
+    transform: translateY(-2px);
+  }
+
+  /* Ritual Button – Outline style */
+  .btn-primary {
+    @apply border border-ritual-green text-ritual-green hover:bg-ritual-green/10 px-4 py-2.5 rounded-lg font-semibold transition-all duration-200;
+  }
+
+  .btn-primary:hover {
+    @apply shadow-glow-green;
+  }
+
+  .btn-primary:focus-visible {
+    @apply ring-2 ring-ritual-green/50 ring-offset-2 ring-offset-black;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply border border-dashed border-ritual-gold text-ritual-gold hover:bg-ritual-gold/10 px-4 py-2.5 rounded-lg font-semibold transition-all;
+  }
+
+  /* Danger button */
+  .btn-danger {
+    @apply border border-red-500/50 text-red-400 hover:bg-red-500/10 px-4 py-2.5 rounded-lg font-semibold transition-all;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full px-4 py-3 bg-ritual-surface border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 text-sm focus:border-ritual-green focus:ring-2 focus:ring-ritual-green/20 focus:outline-none transition-all;
+  }
+
+  /* Status badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider;
+  }
+
+  .badge-green {
+    @apply bg-ritual-green/10 text-ritual-green border border-ritual-green/20;
+  }
+
+  .badge-pink {
+    @apply bg-ritual-pink/10 text-ritual-pink border border-ritual-pink/20;
+  }
+
+  .badge-gold {
+    @apply bg-ritual-gold/10 text-ritual-gold border border-ritual-gold/20;
+  }
+
+  .badge-red {
+    @apply bg-red-500/10 text-red-400 border border-red-500/20;
+  }
+
+  /* Hex address monospace */
+  .address {
+    @apply font-mono text-xs text-gray-500 truncate;
+  }
+
+  /* Section divider with gradient */
+  .section-divider {
+    @apply h-px bg-gradient-to-r from-ritual-green/30 via-gray-800 to-transparent;
+  }
+
+  /* AI output indicator */
+  .ai-output {
+    @apply border-l-4 border-ritual-pink/80 bg-ritual-pink/5 pl-4 pr-4 py-3;
+  }
+
+  .ai-output-header {
+    @apply flex items-center gap-2 text-ritual-pink text-xs font-mono uppercase tracking-wider mb-2;
+  }
 }
 
-/* Custom scrollbar for dark theme */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+@layer utilities {
+  /* Ensure minimum contrast on elevated surfaces */
+  .text-on-elevated {
+    @apply text-gray-400;
+  }
 
-::-webkit-scrollbar-track {
-  background: #111;
-}
+  /* Custom scrollbar for dark mode */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
-}
+  ::-webkit-scrollbar-track {
+    @apply bg-ritual-black;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #444;
-}
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-800 rounded-full;
+  }
 
-/* Glow effects */
-.glow {
-  box-shadow: 0 0 20px rgba(200, 255, 0, 0.3);
-}
-
-.glow-text {
-  text-shadow: 0 0 10px rgba(200, 255, 0, 0.5);
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-700;
+  }
 }
