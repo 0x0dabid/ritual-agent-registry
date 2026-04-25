@@ -181,8 +181,8 @@ export default function AgentDetailPage() {
 
           <div className="section-divider mb-8" />
 
-          {/* Code Verification */}
-          <div className="mb-8">
+          {/* Code Verification — only shown when agent registered a real code hash */}
+          {agent.codeHash && agent.codeHash !== `0x${'0'.repeat(64)}` && <div className="mb-8">
             <h2 className="text-xs text-gray-500 uppercase tracking-wider mb-4">Code Verification</h2>
             <div className="bg-ritual-surface rounded-xl p-4">
               <p className="text-sm text-gray-400 mb-3">
@@ -220,7 +220,7 @@ export default function AgentDetailPage() {
                 </p>
               )}
             </div>
-          </div>
+          </div>}
 
           {/* Endpoint & Metadata */}
           <div className="space-y-4">
