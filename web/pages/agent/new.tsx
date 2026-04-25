@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { agentRegistryAbi, publicClient, ritualChain } from '../../lib/ritual';
 
 const EMPTY_CODE_HASH = `0x${'0'.repeat(64)}` as `0x${string}`;
+const EXPLORER = 'https://explorer.ritualfoundation.org';
 
 interface DeployedContract {
   address: string;
@@ -15,14 +16,66 @@ interface DeployedContract {
   timestamp: string;
 }
 
+const isRitualPrecompile = (addr: string) =>
+  /^0x0{37}0*08[0-2][0-9a-f]$/i.test(addr.toLowerCase().padStart(42, '0'));
+
+async function checkPrecompileInteraction(contractAddress: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${EXPLORER}/api/v2/addresses/${contractAddress}/internal-transactions?limit=50`);
+    if (res.ok) {
+      const data = await res.json();
+      return (data.items ?? []).some((tx: any) => isRitualPrecompile(tx.to?.hash ?? tx.to ?? ''));
+    }
+  } catch {}
+  try {
+    const res = await fetch(`${EXPLORER}/api?module=account&action=txlistinternal&address=${contractAddress}`);
+    const data = await res.json();
+    if (data.status === '1' && Array.isArray(data.result)) {
+      return data.result.some((tx: any) => isRitualPrecompile(tx.to ?? ''));
+    }
+  } catch {}
+  return false;
+}
+
 async function fetchDeployedAgents(walletAddress: string): Promise<DeployedContract[]> {
-  const res = await fetch(`/api/deployed-agents?address=${walletAddress}`);
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? 'Explorer unreachable');
-  }
-  const data = await res.json();
-  return data.agents ?? [];
+  // Call explorer directly from browser — avoids Vercel server IPs being blocked
+  try {
+    const v2 = await fetch(`${EXPLORER}/api/v2/addresses/${walletAddress}/transactions?filter=to%3Anull&limit=50`);
+    if (v2.ok) {
+      const data = await v2.json();
+      const items: any[] = data.items ?? [];
+      const contracts = items
+        .filter((tx: any) => tx.created_contract?.hash)
+        .map((tx: any) => ({
+          address: tx.created_contract.hash,
+          txHash: tx.hash,
+          blockNumber: String(tx.block),
+          timestamp: String(Math.floor(new Date(tx.timestamp).getTime() / 1000)),
+        }));
+      const checks = await Promise.all(contracts.map(c => checkPrecompileInteraction(c.address)));
+      return contracts.filter((_, i) => checks[i]);
+    }
+  } catch {}
+
+  // Blockscout v1 fallback
+  try {
+    const v1 = await fetch(`${EXPLORER}/api?module=account&action=txlist&address=${walletAddress}&sort=desc`);
+    const data = await v1.json();
+    if (data.status === '1' && Array.isArray(data.result)) {
+      const contracts = data.result
+        .filter((tx: any) => tx.contractAddress && tx.contractAddress !== '')
+        .map((tx: any) => ({
+          address: tx.contractAddress,
+          txHash: tx.hash,
+          blockNumber: tx.blockNumber,
+          timestamp: tx.timeStamp,
+        }));
+      const checks = await Promise.all(contracts.map((c: DeployedContract) => checkPrecompileInteraction(c.address)));
+      return contracts.filter((_: any, i: number) => checks[i]);
+    }
+  } catch {}
+
+  throw new Error('Could not reach the Ritual Chain explorer. Enter your agent contract address manually below.');
 }
 
 export default function RegisterAgentPage() {
@@ -40,6 +93,7 @@ export default function RegisterAgentPage() {
   const [contracts, setContracts] = useState<DeployedContract[] | null>(null);
   const [loadingContracts, setLoadingContracts] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [manualAddress, setManualAddress] = useState('');
 
   const handleLoad = async () => {
     if (!address) return;
@@ -56,6 +110,12 @@ export default function RegisterAgentPage() {
     } finally {
       setLoadingContracts(false);
     }
+  };
+
+  const handleManualSelect = () => {
+    const addr = manualAddress.trim();
+    if (!addr.match(/^0x[0-9a-fA-F]{40}$/)) return;
+    setSelected({ address: addr, txHash: '', blockNumber: '', timestamp: '' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,7 +219,37 @@ export default function RegisterAgentPage() {
               </p>
 
               {loadError && (
-                <p className="text-red-400 text-sm mb-3">{loadError}</p>
+                <div className="mb-4">
+                  <p className="text-red-400 text-sm mb-4">{loadError}</p>
+                  {/* Manual address fallback */}
+                  <div className="bg-ritual-surface border border-gray-700 rounded-xl p-4">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Enter Contract Address Manually</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={manualAddress}
+                        onChange={e => setManualAddress(e.target.value)}
+                        placeholder="0x..."
+                        className="input-field flex-1 font-mono text-sm"
+                      />
+                      <button
+                        onClick={handleManualSelect}
+                        disabled={!manualAddress.match(/^0x[0-9a-fA-F]{40}$/)}
+                        className="btn-primary text-sm disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                      >
+                        Use
+                      </button>
+                    </div>
+                    <a
+                      href={`https://explorer.ritualfoundation.org/address/${address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-ritual-green text-xs font-mono hover:underline mt-3 inline-block"
+                    >
+                      Find your contracts on explorer →
+                    </a>
+                  </div>
+                </div>
               )}
 
               {contracts.length === 0 && !loadError ? (
@@ -174,7 +264,7 @@ export default function RegisterAgentPage() {
                     View on explorer →
                   </a>
                 </div>
-              ) : (
+              ) : !loadError && (
                 <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                   {contracts.map(contract => (
                     <button
