@@ -22,17 +22,15 @@ export default function RegisterAgentPage() {
 
   const [myAgents, setMyAgents] = useState<Agent[] | null>(null);
   const [loadingAgents, setLoadingAgents] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
   const handleLoadAgents = async () => {
     if (!address) return;
     setLoadingAgents(true);
     setMyAgents(null);
-    setSelectedAgent(null);
     try {
       const agents = await getAgentsByOwner(address);
       setMyAgents(agents);
-    } catch (err: any) {
+    } catch {
       setMyAgents([]);
     } finally {
       setLoadingAgents(false);
@@ -48,7 +46,6 @@ export default function RegisterAgentPage() {
 
     try {
       const contractAddress = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS! as `0x${string}`;
-
       const hash = await walletClient.writeContract({
         address: contractAddress,
         abi: agentRegistryAbi,
@@ -57,12 +54,10 @@ export default function RegisterAgentPage() {
         args: [name, address, EMPTY_CODE_HASH, [], ''],
       });
       setTxHash(hash);
-
       await publicClient.waitForTransactionReceipt({ hash });
       setSubmitting(false);
       setTimeout(() => router.push('/'), 2000);
     } catch (err: any) {
-      console.error('Registration error:', err);
       setError(err.message || 'Transaction failed');
       setSubmitting(false);
     }
@@ -107,13 +102,14 @@ export default function RegisterAgentPage() {
 
         <div className="text-center mb-10">
           <h1 className="text-3xl font-display font-bold text-ritual-lime mb-3">Register Agent</h1>
-          <p className="text-gray-400">Register a new agent or load your existing ones.</p>
+          <p className="text-gray-400">Load your on-chain agents or register a new one.</p>
         </div>
 
         <div className="space-y-4">
-          {/* Wallet address + Load button */}
+
+          {/* Wallet + Load My Agents */}
           <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 shadow-card">
-            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">Your Wallet</label>
+            <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2">Wallet Address</label>
             <div className="flex items-center gap-3">
               <div className="flex-1 px-4 py-3 bg-ritual-surface border border-gray-800 rounded-lg font-mono text-sm text-ritual-lime truncate">
                 {address}
@@ -121,75 +117,68 @@ export default function RegisterAgentPage() {
               <button
                 onClick={handleLoadAgents}
                 disabled={loadingAgents}
-                className="flex-shrink-0 btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="flex-shrink-0 btn-secondary text-sm disabled:opacity-50 flex items-center gap-2"
               >
-                {loadingAgents ? (
-                  <div className="w-4 h-4 border-2 border-ritual-pink border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                )}
+                {loadingAgents
+                  ? <div className="w-4 h-4 border-2 border-ritual-pink border-t-transparent rounded-full animate-spin" />
+                  : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                }
                 Load My Agents
               </button>
             </div>
           </div>
 
-          {/* Loaded agents list */}
+          {/* On-chain agents for this wallet */}
           {myAgents !== null && (
             <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 shadow-card">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-4">
-                {myAgents.length === 0 ? 'No agents found for this wallet' : `${myAgents.length} agent${myAgents.length > 1 ? 's' : ''} found — select one to register`}
+                {myAgents.length === 0
+                  ? 'No agents found on-chain for this wallet'
+                  : `${myAgents.length} agent${myAgents.length !== 1 ? 's' : ''} found on Ritual Chain`}
               </p>
 
               {myAgents.length === 0 ? (
-                <p className="text-gray-500 text-sm">This wallet hasn&apos;t registered any agents yet. Use the form below to create one.</p>
+                <p className="text-gray-500 text-sm">This wallet has no registered agents yet. Use the form below to create one.</p>
               ) : (
                 <div className="space-y-3">
                   {myAgents.map(agent => (
-                    <button
+                    <Link
                       key={agent.address}
-                      onClick={() => {
-                        setSelectedAgent(agent);
-                        setName(agent.name);
-                      }}
-                      className={`w-full text-left p-4 rounded-xl border transition-all ${
-                        selectedAgent?.address === agent.address
-                          ? 'border-ritual-green/50 bg-ritual-green/5'
-                          : 'border-gray-800 hover:border-gray-600 bg-ritual-surface'
-                      }`}
+                      href={`/agent/${agent.address}`}
+                      className="flex items-center justify-between p-4 rounded-xl border border-gray-800 hover:border-ritual-green/40 bg-ritual-surface hover:bg-ritual-green/5 transition-all group"
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-300 font-semibold">{agent.name}</p>
-                          <p className="font-mono text-xs text-gray-500 mt-1">
-                            {agent.address.slice(0, 10)}...{agent.address.slice(-8)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {agent.active ? (
-                            <span className="badge badge-green">Active</span>
-                          ) : (
-                            <span className="badge badge-red">Inactive</span>
-                          )}
-                          {selectedAgent?.address === agent.address && (
-                            <svg className="w-5 h-5 text-ritual-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
+                      <div>
+                        <p className="text-gray-300 font-semibold group-hover:text-ritual-green transition-colors">
+                          {agent.name}
+                        </p>
+                        <p className="font-mono text-xs text-gray-500 mt-1">
+                          {agent.address.slice(0, 10)}...{agent.address.slice(-8)}
+                        </p>
                       </div>
-                    </button>
+                      <div className="flex items-center gap-3">
+                        {agent.active
+                          ? <span className="badge badge-green">Active</span>
+                          : <span className="badge badge-red">Inactive</span>
+                        }
+                        <svg className="w-4 h-4 text-gray-600 group-hover:text-ritual-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </Link>
                   ))}
                 </div>
               )}
             </div>
           )}
 
-          {/* Register form */}
+          {/* Register new agent */}
           <div className="bg-ritual-elevated border border-gray-800 rounded-xl p-6 shadow-card">
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-5">Register New Agent</p>
+
             {error && (
-              <div className="mb-6 bg-red-900/20 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm flex items-start gap-3">
+              <div className="mb-5 bg-red-900/20 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm flex items-start gap-3">
                 <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -198,7 +187,7 @@ export default function RegisterAgentPage() {
             )}
 
             {txHash && (
-              <div className="mb-6 bg-ritual-green/10 border border-ritual-green/30 rounded-xl p-6 text-center">
+              <div className="mb-5 bg-ritual-green/10 border border-ritual-green/30 rounded-xl p-6 text-center">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-ritual-green/20 flex items-center justify-center">
                   <svg className="w-6 h-6 text-ritual-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -239,7 +228,7 @@ export default function RegisterAgentPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    {selectedAgent ? `Register ${selectedAgent.name}` : 'Register Agent'}
+                    Register Agent
                   </>
                 )}
               </button>
@@ -247,6 +236,7 @@ export default function RegisterAgentPage() {
               <p className="text-xs text-gray-600 text-center">Requires RITUAL for gas.</p>
             </form>
           </div>
+
         </div>
       </div>
     </div>
