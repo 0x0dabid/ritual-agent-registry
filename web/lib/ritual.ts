@@ -118,7 +118,7 @@ export async function fetchAllAgents(contractAddress: string): Promise<Agent[]> 
   }) as bigint;
 
   const addresses: string[] = [];
-  for (let i = 0n; i < count; i++) {
+  for (let i = BigInt(0); i < count; i++) {
     const [agentAddr, exists] = await (publicClient as any).readContract({
       address: contractAddress as `0x${string}`,
       abi: agentRegistryAbi,
