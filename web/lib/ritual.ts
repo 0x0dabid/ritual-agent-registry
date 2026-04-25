@@ -135,7 +135,10 @@ export async function getAgentByAddress(agentAddress: string): Promise<Agent | n
   const contractAddress = process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS;
   if (!contractAddress) throw new Error('NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS not set');
   try {
-    return await fetchAgent(contractAddress, agentAddress);
+    const agent = await fetchAgent(contractAddress, agentAddress);
+    // Contract returns empty struct for unregistered addresses — treat as not found
+    if (!agent.name) return null;
+    return agent;
   } catch {
     return null;
   }
