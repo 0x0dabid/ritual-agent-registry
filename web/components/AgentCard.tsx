@@ -21,7 +21,10 @@ export default function AgentCard({ agent }: AgentCardProps) {
   const isActive = agent.active;
 
   return (
-    <div className="group card p-6 hover:shadow-glow-green/10 transition-all duration-300">
+    <div className="group card p-6 hover:shadow-glow-green transition-all duration-300 relative">
+      {/* Left accent border */}
+      <div className="absolute left-0 top-4 bottom-4 w-1 rounded-full bg-gradient-to-b from-ritual-green via-ritual-pink to-ritual-gold opacity-60 group-hover:opacity-100 transition-opacity" />
+
       {/* Header: Name + Status */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
@@ -71,14 +74,14 @@ export default function AgentCard({ agent }: AgentCardProps) {
       </div>
 
       {/* Footer: Owner + Date */}
-      <div className="pt-4 border-t border-gray-800 flex items-center justify-between text-xs text-gray-500">
+      <div className="pt-4 border-t border-gray-800 flex items-center justify-between text-xs">
         <div>
-          <span className="uppercase tracking-wider">Owner</span>
-          <span className="font-mono ml-2 text-gray-400">
+          <span className="text-ritual-green uppercase tracking-wider text-[10px]">Owner</span>
+          <span className="font-mono ml-2 text-ritual-lime">
             {agent.owner.slice(0, 8)}...{agent.owner.slice(-6)}
           </span>
         </div>
-        <span className="text-gray-600">{registeredDate}</span>
+        <span className="text-gray-500">{registeredDate}</span>
       </div>
 
       {/* Hover overlay with View link */}

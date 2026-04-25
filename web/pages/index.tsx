@@ -92,7 +92,7 @@ export default function HomePage() {
 
                   <button
                     onClick={() => window.location.href = '/agent/new'}
-                    className="inline-flex items-center gap-2 px-4 py-3 rounded-lg border border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-colors text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-3 rounded-lg border border-ritual-pink text-ritual-pink hover:bg-ritual-pink/10 hover:shadow-glow-pink transition-all text-sm"
                   >
                     Learn how it works
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +133,7 @@ export default function HomePage() {
         {/* Filters */}
         <div className="mb-12 flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ritual-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -147,7 +147,7 @@ export default function HomePage() {
           <select
             value={capability}
             onChange={e => setCapability(e.target.value)}
-            className="px-4 py-3 bg-ritual-surface border border-gray-700 rounded-xl text-gray-300 focus:border-ritual-green focus:ring-2 focus:ring-ritual-green/20 focus:outline-none cursor-pointer"
+            className="px-4 py-3 bg-ritual-surface border border-gray-700 rounded-xl text-gray-300 focus:border-ritual-pink focus:ring-2 focus:ring-ritual-pink/20 focus:outline-none cursor-pointer appearance-none"
           >
             <option value="">All capabilities</option>
             {allCaps.map(cap => (
@@ -184,19 +184,19 @@ export default function HomePage() {
         {/* Empty state */}
         {!loading && filtered.length === 0 && !error && (
           <div className="py-20 text-center">
-            <div className="inline-block p-6 rounded-full bg-ritual-elevated border border-gray-800 mb-6">
-              <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-block p-6 rounded-full bg-ritual-elevated border border-ritual-pink/30 mb-6">
+              <svg className="w-12 h-12 text-ritual-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h3 className="text-xl font-display font-bold text-gray-300 mb-2">No agents found</h3>
-            <p className="text-gray-500 max-w-md mx-auto">
+            <h3 className="text-xl font-display font-bold text-ritual-lime mb-2">No agents found</h3>
+            <p className="text-gray-400 max-w-md mx-auto">
               {allAgents.length === 0
                 ? 'Be the first to register an autonomous agent on Ritual Chain.'
                 : 'Try adjusting your search filters.'}
             </p>
             {!isConnected && allAgents.length === 0 && (
-              <p className="text-gray-600 text-sm mt-4">
+              <p className="text-ritual-green text-sm mt-4 font-mono">
                 Connect your wallet to get started.
               </p>
             )}
@@ -207,7 +207,7 @@ export default function HomePage() {
         {!loading && filtered.length > 0 && (
           <>
             <div className="flex items-center justify-between mb-8">
-              <p className="text-gray-500 font-mono text-sm">
+              <p className="text-gray-400 font-mono text-sm">
                 Showing <span className="text-ritual-lime font-semibold">{filtered.length}</span> of{' '}
                 <span className="text-ritual-green font-semibold">{allAgents.length}</span> agents
               </p>
@@ -224,11 +224,11 @@ export default function HomePage() {
         {/* Footer CTA */}
         {!isConnected && allAgents.length === 0 && (
           <div className="mt-20 text-center">
-            <div className="bg-ritual-elevated border border-gray-800 rounded-2xl p-8 max-w-2xl mx-auto shadow-card">
-              <h2 className="text-2xl font-display font-bold text-gray-300 mb-4">
+            <div className="bg-ritual-elevated border border-ritual-pink/30 rounded-2xl p-8 max-w-2xl mx-auto shadow-card">
+              <h2 className="text-2xl font-display font-bold text-ritual-lime mb-4">
                 Ready to deploy your agent?
               </h2>
-              <p className="text-gray-400 mb-6 leading-relaxed">
+              <p className="text-gray-300 mb-6 leading-relaxed">
                 Connect your wallet to register an autonomous AI agent on the Ritual Chain registry.
                 Your agent&apos;s code hash is stored on-chain for verification.
               </p>

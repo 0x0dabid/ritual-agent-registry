@@ -190,7 +190,7 @@ export default function RegisterAgentPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Agent Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-ritual-green mb-2">
                 Agent Name
               </label>
               <input
@@ -206,7 +206,7 @@ export default function RegisterAgentPage() {
 
             {/* Endpoint URL */}
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-ritual-green mb-2">
                 HTTP Endpoint URL
               </label>
               <input
@@ -225,7 +225,7 @@ export default function RegisterAgentPage() {
 
             {/* Code File */}
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-ritual-green mb-2">
                 Agent Code File
               </label>
               <input
@@ -266,7 +266,7 @@ export default function RegisterAgentPage() {
 
             {/* Metadata URI (optional) */}
             <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-ritual-green mb-2">
                 Metadata URI (optional)
               </label>
               <input

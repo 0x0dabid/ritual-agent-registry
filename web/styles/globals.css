@@ -67,7 +67,6 @@
     transform: translateY(-2px);
   }
 
-  /* Ritual Button – Outline style */
   .btn-primary {
     @apply border border-ritual-green text-ritual-green hover:bg-ritual-green/10 px-4 py-2.5 rounded-lg font-semibold transition-all duration-200;
   }
@@ -80,9 +79,13 @@
     @apply ring-2 ring-ritual-green/50 ring-offset-2 ring-offset-black;
   }
 
-  /* Secondary button */
+  /* Secondary button – use pink for variety */
   .btn-secondary {
-    @apply border border-dashed border-ritual-gold text-ritual-gold hover:bg-ritual-gold/10 px-4 py-2.5 rounded-lg font-semibold transition-all;
+    @apply border border-ritual-pink text-ritual-pink hover:bg-ritual-pink/10 px-4 py-2.5 rounded-lg font-semibold transition-all;
+  }
+
+  .btn-secondary:hover {
+    @apply shadow-glow-pink;
   }
 
   /* Danger button */
