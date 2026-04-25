@@ -109,7 +109,7 @@ export default function AgentDetailPage() {
             </div>
             <div className="flex gap-3 flex-shrink-0">
               <a
-                href={`https://explorer.ritual.network/address/${agent.address}`}
+                href={`https://explorer.ritualfoundation.org/address/${agent.address}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-lg border border-gray-700 hover:border-gray-600 text-gray-400 hover:text-gray-300 text-sm font-medium transition-all"

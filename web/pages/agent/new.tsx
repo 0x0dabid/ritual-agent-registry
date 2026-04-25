@@ -166,7 +166,7 @@ export default function RegisterAgentPage() {
                 <div className="text-center py-4">
                   <p className="text-gray-500 text-sm">No Ritual agent contracts found for this wallet. Deploy an agent contract that calls a Ritual precompile first.</p>
                   <a
-                    href={`https://explorer.ritual.network/address/${address}`}
+                    href={`https://explorer.ritualfoundation.org/address/${address}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-ritual-green text-xs font-mono hover:underline mt-2 inline-block"

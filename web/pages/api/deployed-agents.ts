@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-const EXPLORER = 'https://explorer.ritual.network';
+const EXPLORER = 'https://explorer.ritualfoundation.org';
 
 // Ritual precompile addresses: 0x0000...0800 through 0x0000...082F
 const isRitualPrecompile = (addr: string) =>
